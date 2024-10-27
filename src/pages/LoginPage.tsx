@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyRound, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, AlertCircle, Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -48,7 +48,9 @@ export default function LoginPage() {
                 Username
               </label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-3 h-5 w-5 text-yellow-500" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center z-10">
+                  <User className="h-5 w-5 text-yellow-500" aria-hidden="true" /> {/* Icon visible by default */}
+                </div>
                 <input
                   id="username"
                   name="username"
@@ -67,7 +69,9 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-3 h-5 w-5 text-yellow-500" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center z-10">
+                  <Lock className="h-5 w-5 text-yellow-500" aria-hidden="true" /> {/* Icon visible by default */}
+                </div>
                 <input
                   id="password"
                   name="password"
