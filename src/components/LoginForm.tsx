@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyRound, AlertCircle } from 'lucide-react';
+import { Pill, AlertCircle } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: () => void;
@@ -26,7 +26,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-            <KeyRound className="h-6 w-6 text-blue-600" />
+            <Pill className="h-6 w-6 text-blue-600" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to PharmaCare
