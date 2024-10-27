@@ -10,7 +10,7 @@ export default function UsersPage() {
       id: '1',
       username: 'admin',
       name: 'System Admin',
-      email: 'admin@pharmacare.com',
+      email: 'adminstrator@pharmacare.com',
       role: 'admin',
       active: true,
       lastLogin: '2024-03-15 10:30:00'
