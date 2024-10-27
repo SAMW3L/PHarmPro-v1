@@ -1,5 +1,5 @@
 import React from 'react';
-import { Keyround, AlertCircle } from 'lucide-react';
+import { KeyRound, AlertCircle } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: () => void;
