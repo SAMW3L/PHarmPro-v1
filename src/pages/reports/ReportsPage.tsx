@@ -1,7 +1,9 @@
 import React from 'react';
 import Layout from '../../components/Layout';
-import { Calendar, Download, TrendingUp, Package, AlertTriangle, Users, DollarSign } from 'lucide-react';
+import { Calendar, Download, TrendingUp, Package, AlertTriangle, Users, DollarSign, FileSpreadsheet } from 'lucide-react';
 import { Medicine, Sale, User } from '../../types';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = React.useState('sales');
@@ -52,18 +54,6 @@ export default function ReportsPage() {
     }
   ]);
 
-  const [users] = React.useState<User[]>([
-    {
-      id: '1',
-      username: 'admin',
-      name: 'System Admin',
-      email: 'admin@pharmacare.com',
-      role: 'admin',
-      active: true,
-      lastLogin: '2024-03-15 10:30:00'
-    }
-  ]);
-
   const reports = [
     { id: 'sales', name: 'Sales Report', icon: TrendingUp },
     { id: 'inventory', name: 'Inventory Report', icon: Package },
@@ -79,50 +69,103 @@ export default function ReportsPage() {
           title: 'Sales Report',
           data: salesData.filter(sale => 
             sale.date >= dateRange.start && sale.date <= dateRange.end
-          ),
+          ).map(sale => ({
+            Date: sale.date,
+            Customer: sale.customerName,
+            Items: sale.items.length,
+            Total: `Tsh.${sale.total.toFixed(2)}`,
+            'Payment Method': sale.paymentMethod,
+            Status: sale.status
+          })),
           columns: ['Date', 'Customer', 'Items', 'Total', 'Payment Method', 'Status']
         };
       case 'inventory':
         return {
           title: 'Inventory Report',
-          data: medicines,
+          data: medicines.map(med => ({
+            Name: med.name,
+            Stock: med.stock,
+            Category: med.category,
+            'Expiry Date': med.expiryDate,
+            Price: `Tsh.${med.price.toFixed(2)}`
+          })),
           columns: ['Name', 'Stock', 'Category', 'Expiry Date', 'Price']
         };
       case 'expiring':
+        const threeMonthsFromNow = new Date();
+        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
         return {
           title: 'Expiring Items Report',
-          data: medicines.filter(med => {
-            const expiryDate = new Date(med.expiryDate);
-            const threeMonthsFromNow = new Date();
-            threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
-            return expiryDate <= threeMonthsFromNow;
-          }),
+          data: medicines
+            .filter(med => new Date(med.expiryDate) <= threeMonthsFromNow)
+            .map(med => ({
+              Name: med.name,
+              'Expiry Date': med.expiryDate,
+              Stock: med.stock,
+              Location: med.location
+            })),
           columns: ['Name', 'Expiry Date', 'Stock', 'Location']
         };
-      case 'collections':
-        return {
-          title: 'Employee Collections Report',
-          data: users.map(user => ({
-            ...user,
-            totalSales: salesData.filter(sale => sale.soldBy === user.name)
-              .reduce((sum, sale) => sum + sale.total, 0)
-          })),
-          columns: ['Name', 'Role', 'Total Sales']
-        };
-      case 'reorder':
-        return {
-          title: 'Reorder Level Report',
-          data: medicines.filter(med => med.stock <= med.reorderLevel),
-          columns: ['Name', 'Current Stock', 'Reorder Level', 'Supplier']
-        };
       default:
-        return { title: '', data: [], columns: [] };
+        return {
+          title: 'No Data',
+          data: [],
+          columns: []
+        };
     }
   };
 
-  const reportData = getReportData();
+  const handleExportPDF = () => {
+    const reportData = getReportData();
+    const doc = new jsPDF();
 
-  const handleExport = () => {
+    // Add header
+    doc.setFontSize(18);
+    doc.text('PharmaCare', 105, 15, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text(reportData.title, 105, 25, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Period: ${dateRange.start} to ${dateRange.end}`, 105, 35, { align: 'center' });
+
+    // Add table
+    (doc as any).autoTable({
+      head: [reportData.columns],
+      body: reportData.data.map(item => Object.values(item)),
+      startY: 45,
+      theme: 'grid',
+      styles: {
+        fontSize: 12,
+        cellPadding: 5
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 12,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      }
+    });
+
+    // Add footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        doc.internal.pageSize.width / 2,
+        doc.internal.pageSize.height - 10,
+        { align: 'center' }
+      );
+    }
+
+    doc.save(`${selectedReport}-report.pdf`);
+  };
+
+  const handleExportExcel = () => {
+    const reportData = getReportData();
     const csvContent = [
       reportData.columns.join(','),
       ...reportData.data.map(item => Object.values(item).join(','))
@@ -137,18 +180,29 @@ export default function ReportsPage() {
     window.URL.revokeObjectURL(url);
   };
 
+  const reportData = getReportData();
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-900">Reports</h1>
-          <button 
-            onClick={handleExport}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            <Download className="h-5 w-5 mr-2" />
-            Export Report
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleExportPDF}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Export PDF
+            </button>
+            <button 
+              onClick={handleExportExcel}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              <FileSpreadsheet className="h-5 w-5 mr-2" />
+              Export Excel
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
