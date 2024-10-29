@@ -8,32 +8,104 @@ export default function SalesPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [cart, setCart] = React.useState<Array<{ medicine: Medicine; quantity: number }>>([]);
   const [showReceipt, setShowReceipt] = React.useState(false);
+  const [paymentMethod, setPaymentMethod] = React.useState<'cash' | 'card' | 'mobile'>('cash');
   const [currentSale, setCurrentSale] = React.useState<{
     items: Array<{ medicine: Medicine; quantity: number }>;
     total: number;
     transactionId: string;
     date: string;
+    paymentMethod: string;
   } | null>(null);
   const [successMessage, setSuccessMessage] = React.useState('');
 
   const [medicines, setMedicines] = React.useState<Medicine[]>([
     {
-      id: '1',
-      name: 'Paracetamol 500mg',
-      barcode: '123456789',
-      genericName: 'Acetaminophen',
-      manufacturer: 'PharmaCo',
-      category: 'Pain Relief',
-      dosageForm: 'Tablet',
-      strength: '500mg',
-      price: 5.99,
-      reorderLevel: 100,
-      stock: 85,
-      batchNumber: 'BAT123',
-      expiryDate: '2024-12-31',
-      location: 'Shelf A1',
-      supplier: 'MedSupply Inc'
-    }
+    
+          id: '1',
+          name: 'Paracetamol 500mg',
+          barcode: '123456789',
+          genericName: 'Acetaminophen',
+          manufacturer: 'PharmaCo',
+          category: 'Pain Relief',
+          dosageForm: 'Tablet',
+          strength: '500mg',
+          price: 50.00,
+          reorderLevel: 100,
+          stock: 26,
+          batchNumber: 'BAT123',
+          expiryDate: '2024-12-31',
+          location: 'Shelf A1',
+          supplier: 'MedSupply Inc'
+      },
+      {
+          id: '2',
+          name: 'Ibuprofen 400mg',
+          barcode: '987654321',
+          genericName: 'Ibuprofen',
+          manufacturer: 'HealthCorp',
+          category: 'Pain Relief',
+          dosageForm: 'Tablet',
+          strength: '400mg',
+          price: 45.00,
+          reorderLevel: 80,
+          stock: 50,
+          batchNumber: 'BAT124',
+          expiryDate: '2025-01-15',
+          location: 'Shelf B2',
+          supplier: 'PharmaPlus'
+      },
+      {
+          id: '3',
+          name: 'Amoxicillin 250mg',
+          barcode: '123123123',
+          genericName: 'Amoxicillin',
+          manufacturer: 'MediPharm',
+          category: 'Antibiotic',
+          dosageForm: 'Capsule',
+          strength: '250mg',
+          price: 60.00,
+          reorderLevel: 50,
+          stock: 30,
+          batchNumber: 'BAT125',
+          expiryDate: '2024-11-30',
+          location: 'Shelf C3',
+          supplier: 'QuickMeds'
+      },
+      {
+          id: '4',
+          name: 'Lisinopril 10mg',
+          barcode: '321321321',
+          genericName: 'Lisinopril',
+          manufacturer: 'CardioHealth',
+          category: 'Antihypertensive',
+          dosageForm: 'Tablet',
+          strength: '10mg',
+          price: 55.00,
+          reorderLevel: 40,
+          stock: 20,
+          batchNumber: 'BAT126',
+          expiryDate: '2025-06-15',
+          location: 'Shelf D4',
+          supplier: 'BestMeds'
+      },
+      {
+          id: '5',
+          name: 'Cetirizine 10mg',
+          barcode: '456456456',
+          genericName: 'Cetirizine',
+          manufacturer: 'AllerCare',
+          category: 'Antihistamine',
+          dosageForm: 'Tablet',
+          strength: '10mg',
+          price: 35.00,
+          reorderLevel: 60,
+          stock: 40,
+          batchNumber: 'BAT127',
+          expiryDate: '2024-07-20',
+          location: 'Shelf E5',
+          supplier: 'MediStore'
+      }
+     
   ]);
 
   const addToCart = (medicine: Medicine) => {
@@ -67,7 +139,8 @@ export default function SalesPage() {
       items: [...cart],
       total,
       transactionId: `SALE-${Date.now()}`,
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString(),
+      paymentMethod
     };
 
     // Update stock levels
@@ -108,11 +181,15 @@ export default function SalesPage() {
               table { width: 100%; border-collapse: collapse; }
               th, td { padding: 8px; text-align: left; }
               .total { font-weight: bold; margin-top: 20px; }
+              .payment-method { margin-top: 10px; font-style: italic; }
             </style>
           </head>
           <body>
             <div class="receipt">
               ${document.getElementById('receipt')?.innerHTML}
+              <div class="payment-method">
+                Payment Method: ${currentSale.paymentMethod.charAt(0).toUpperCase() + currentSale.paymentMethod.slice(1)}
+              </div>
             </div>
           </body>
         </html>
@@ -216,6 +293,22 @@ export default function SalesPage() {
                 <span>Total:</span>
                 <span>Tsh.{total.toFixed(2)}</span>
               </div>
+              
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Payment Method
+                </label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'mobile')}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="mobile">Mobile Money</option>
+                </select>
+              </div>
+
               <button
                 onClick={handleCompleteSale}
                 className="w-full mt-4 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"

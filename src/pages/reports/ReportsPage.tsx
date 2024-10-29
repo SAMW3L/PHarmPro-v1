@@ -4,6 +4,7 @@ import { Calendar, Download, TrendingUp, Package, AlertTriangle, Users, DollarSi
 import { Medicine, Sale, User } from '../../types';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { Title } from 'chart.js';
 
 export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = React.useState('sales');
@@ -35,22 +36,90 @@ export default function ReportsPage() {
   ]);
 
   const [medicines] = React.useState<Medicine[]>([
+   {
+        id: '1',
+        name: 'Paracetamol 500mg',
+        barcode: '123456789',
+        genericName: 'Acetaminophen',
+        manufacturer: 'PharmaCo',
+        category: 'Pain Relief',
+        dosageForm: 'Tablet',
+        strength: '500mg',
+        price: 50.00,
+        reorderLevel: 100,
+        stock: 26,
+        batchNumber: 'BAT123',
+        expiryDate: '2024-12-31',
+        location: 'Shelf A1',
+        supplier: 'MedSupply Inc'
+    },
     {
-      id: '1',
-      name: 'Paracetamol 500mg',
-      barcode: '123456789',
-      genericName: 'Acetaminophen',
-      manufacturer: 'PharmaCo',
-      category: 'Pain Relief',
-      dosageForm: 'Tablet',
-      strength: '500mg',
-      price: 5.99,
-      reorderLevel: 100,
-      stock: 85,
-      batchNumber: 'BAT123',
-      expiryDate: '2024-12-31',
-      location: 'Shelf A1',
-      supplier: 'MedSupply Inc'
+        id: '2',
+        name: 'Ibuprofen 400mg',
+        barcode: '987654321',
+        genericName: 'Ibuprofen',
+        manufacturer: 'HealthCorp',
+        category: 'Pain Relief',
+        dosageForm: 'Tablet',
+        strength: '400mg',
+        price: 45.00,
+        reorderLevel: 80,
+        stock: 50,
+        batchNumber: 'BAT124',
+        expiryDate: '2025-01-15',
+        location: 'Shelf B2',
+        supplier: 'PharmaPlus'
+    },
+    {
+        id: '3',
+        name: 'Amoxicillin 250mg',
+        barcode: '123123123',
+        genericName: 'Amoxicillin',
+        manufacturer: 'MediPharm',
+        category: 'Antibiotic',
+        dosageForm: 'Capsule',
+        strength: '250mg',
+        price: 60.00,
+        reorderLevel: 50,
+        stock: 30,
+        batchNumber: 'BAT125',
+        expiryDate: '2024-11-30',
+        location: 'Shelf C3',
+        supplier: 'QuickMeds'
+    },
+    {
+        id: '4',
+        name: 'Lisinopril 10mg',
+        barcode: '321321321',
+        genericName: 'Lisinopril',
+        manufacturer: 'CardioHealth',
+        category: 'Antihypertensive',
+        dosageForm: 'Tablet',
+        strength: '10mg',
+        price: 55.00,
+        reorderLevel: 40,
+        stock: 20,
+        batchNumber: 'BAT126',
+        expiryDate: '2025-06-15',
+        location: 'Shelf D4',
+        supplier: 'BestMeds'
+    },
+    {
+        id: '5',
+        name: 'Cetirizine 10mg',
+        barcode: '456456456',
+        genericName: 'Cetirizine',
+        manufacturer: 'AllerCare',
+        category: 'Antihistamine',
+        dosageForm: 'Tablet',
+        strength: '10mg',
+        price: 35.00,
+        reorderLevel: 60,
+        stock: 40,
+        batchNumber: 'BAT127',
+        expiryDate: '2024-07-20',
+        location: 'Shelf E5',
+        supplier: 'MediStore'
     }
   ]);
 
@@ -67,16 +136,17 @@ export default function ReportsPage() {
       case 'sales':
         return {
           title: 'Sales Report',
-          data: salesData.filter(sale => 
-            sale.date >= dateRange.start && sale.date <= dateRange.end
-          ).map(sale => ({
-            Date: sale.date,
-            Customer: sale.customerName,
-            Items: sale.items.length,
-            Total: `Tsh.${sale.total.toFixed(2)}`,
-            'Payment Method': sale.paymentMethod,
-            Status: sale.status
-          })),
+          data: [''],
+          // data: salesData.filter(sale => 
+          //   sale.date >= dateRange.start && sale.date <= dateRange.end
+          // ).map(sale => ({
+          //   Date: sale.date,
+          //   Customer: sale.customerName,
+          //   Items: sale.items.length,
+          //   Total: `Tsh.${sale.total.toFixed(2)}`,
+          //   'Payment Method': sale.paymentMethod,
+          //   Status: sale.status
+          // })),
           columns: ['Date', 'Customer', 'Items', 'Total', 'Payment Method', 'Status']
         };
       case 'inventory':
@@ -106,11 +176,24 @@ export default function ReportsPage() {
             })),
           columns: ['Name', 'Expiry Date', 'Stock', 'Location']
         };
+        case 'collections':
+          return {
+            title:'Employee collecion Report',
+            data: [''],
+            columns: ['Employee Name','Number of Customer','Total Amount']
+          };
+          case 'reorder':
+          return {
+            title:'Out Of Stock Medicine Report',
+            data: [''],
+            columns: ['Item Name','Initial Balance','Current Balance','Item Category','Item Price']
+          };
       default:
         return {
           title: 'No Data',
           data: [],
-          columns: []
+          columns:[]
+          
         };
     }
   };
@@ -175,7 +258,7 @@ export default function ReportsPage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${selectedReport}-report.csv`;
+    a.download = `${selectedReport}-report.xls`;
     a.click();
     window.URL.revokeObjectURL(url);
   };

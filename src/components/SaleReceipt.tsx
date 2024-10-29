@@ -6,9 +6,10 @@ interface SaleReceiptProps {
   total: number;
   transactionId: string;
   date: string;
+  paymentMethod: string;
 }
 
-export default function SaleReceipt({ items, total, transactionId, date }: SaleReceiptProps) {
+export default function SaleReceipt({ items, total, transactionId, date, paymentMethod }: SaleReceiptProps) {
   return (
     <div className="bg-white p-6 max-w-md mx-auto" id="receipt">
       <div className="text-center mb-6">
@@ -20,6 +21,7 @@ export default function SaleReceipt({ items, total, transactionId, date }: SaleR
       <div className="mb-4">
         <p className="text-sm">Transaction ID: {transactionId}</p>
         <p className="text-sm">Date: {date}</p>
+        <p className="text-sm">Payment Method: {paymentMethod}</p>
       </div>
 
       <div className="border-t border-b border-gray-200 py-4 mb-4">

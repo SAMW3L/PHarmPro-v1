@@ -1,8 +1,9 @@
 import React from 'react';
 import Layout from '../../components/Layout';
-import { Plus, Search, AlertTriangle } from 'lucide-react';
+import { Plus, Search, AlertTriangle, Upload, Info } from 'lucide-react';
 import { Medicine } from '../../types';
 import AddEditMedicineModal from '../../components/modals/AddEditMedicineModal';
+import { read, utils } from 'xlsx';
 
 export default function InventoryPage() {
   const [medicines, setMedicines] = React.useState<Medicine[]>([
@@ -15,11 +16,11 @@ export default function InventoryPage() {
       category: 'Pain Relief',
       dosageForm: 'Tablet',
       strength: '500mg',
-      price: 5.99,
+      price: 50.00,
       reorderLevel: 100,
-      stock: 85,
+      stock: 26,
       batchNumber: 'BAT123',
-      expiryDate: '2024-12-31',
+      expiryDate: '2025-12-31',
       location: 'Shelf A1',
       supplier: 'MedSupply Inc'
     }
@@ -28,6 +29,7 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selectedMedicine, setSelectedMedicine] = React.useState<Medicine | undefined>();
+  const [showUploadInfo, setShowUploadInfo] = React.useState(false);
 
   const handleAddMedicine = (medicine: Partial<Medicine>) => {
     const newMedicine = {
@@ -50,6 +52,84 @@ export default function InventoryPage() {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const data = e.target?.result;
+          const workbook = read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = utils.sheet_to_json(worksheet, { raw: false });
+
+          // Convert column headers to lowercase for case-insensitive comparison
+          const firstRow = jsonData[0] as any;
+          const headers = Object.keys(firstRow).map(key => key.toLowerCase());
+
+          // Check for required columns (case-insensitive)
+          const requiredColumns = ['name', 'price', 'stock', 'category', 'expirydate'];
+          const missingColumns = requiredColumns.filter(col => 
+            !headers.includes(col.toLowerCase())
+          );
+
+          if (missingColumns.length > 0) {
+            alert(`Error: Missing required columns: ${missingColumns.join(', ')}\n\nPlease ensure your Excel file has these column headers (case-insensitive).`);
+            return;
+          }
+
+          const newMedicines = jsonData.map((item: any) => {
+            // Find the actual column name in the original case
+            const getName = (searchKey: string) => {
+              const key = Object.keys(item).find(k => k.toLowerCase() === searchKey.toLowerCase());
+              return key ? item[key] : '';
+            };
+
+            return {
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              name: getName('name'),
+              barcode: getName('barcode')?.toString() || '',
+              genericName: getName('genericname') || '',
+              manufacturer: getName('manufacturer') || '',
+              category: getName('category'),
+              dosageForm: getName('dosageform') || '',
+              strength: getName('strength') || '',
+              price: Number(getName('price')),
+              reorderLevel: Number(getName('reorderlevel')) || 0,
+              stock: Number(getName('stock')),
+              batchNumber: getName('batchnumber')?.toString() || '',
+              expiryDate: getName('expirydate'),
+              location: getName('location') || '',
+              supplier: getName('supplier') || ''
+            };
+          });
+
+          // Validate data types and required values
+          const invalidEntries = newMedicines.filter(med => 
+            typeof med.name !== 'string' || med.name.trim() === '' ||
+            isNaN(med.price) || med.price <= 0 ||
+            isNaN(med.stock) || med.stock < 0 ||
+            typeof med.category !== 'string' || med.category.trim() === '' ||
+            !med.expiryDate || !/^\d{4}-\d{2}-\d{2}$/.test(med.expiryDate)
+          );
+
+          if (invalidEntries.length > 0) {
+            alert(`Error: ${invalidEntries.length} entries have invalid or missing required data. Please check your Excel file and ensure all required fields have valid values.`);
+            return;
+          }
+
+          setMedicines(prev => [...prev, ...newMedicines]);
+          alert(`Successfully imported ${newMedicines.length} medicines`);
+        };
+        reader.readAsBinaryString(file);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('Error uploading file. Please check the file format and try again.');
+      }
+    }
+  };
+
   const openEditModal = (medicine: Medicine) => {
     setSelectedMedicine(medicine);
     setIsModalOpen(true);
@@ -65,16 +145,60 @@ export default function InventoryPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-900">Inventory Management</h1>
-          <button 
-            onClick={() => {
-              setSelectedMedicine(undefined);
-              setIsModalOpen(true);
-            }}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Add Medicine
-          </button>
+          <div className="flex gap-4">
+            <div className="relative">
+              <label className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+                <Upload className="h-5 w-5 mr-2" />
+                Upload Excel
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </label>
+              <button
+                className="absolute -right-8 top-1/2 -translate-y-1/2"
+                onClick={() => setShowUploadInfo(!showUploadInfo)}
+              >
+                <Info className="h-5 w-5 text-gray-500" />
+              </button>
+              {showUploadInfo && (
+                <div className="absolute right-0 mt-2 p-4 bg-white shadow-lg rounded-md w-80 z-10 text-sm">
+                  <h3 className="font-bold mb-2">Required Excel Columns:</h3>
+                  <ul className="list-disc pl-4 space-y-1 text-red-600">
+                    <li>name (text) - Medicine name</li>
+                    <li>price (number) - Price greater than 0</li>
+                    <li>stock (number) - Current stock quantity</li>
+                    <li>category (text) - Medicine category</li>
+                    <li>expiryDate (YYYY-MM-DD) - Expiry date</li>
+                  </ul>
+                  <h3 className="font-bold mt-4 mb-2">Optional Columns:</h3>
+                  <ul className="list-disc pl-4 space-y-1 text-gray-600">
+                    <li>barcode - Barcode number</li>
+                    <li>genericName - Generic name</li>
+                    <li>manufacturer - Manufacturer name</li>
+                    <li>dosageForm - Form of dosage</li>
+                    <li>strength - Medicine strength</li>
+                    <li>reorderLevel - Reorder level</li>
+                    <li>batchNumber - Batch number</li>
+                    <li>location - Storage location</li>
+                    <li>supplier - Supplier name</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+            <button 
+              onClick={() => {
+                setSelectedMedicine(undefined);
+                setIsModalOpen(true);
+              }}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Add Medicine
+            </button>
+          </div>
         </div>
 
         <div className="relative">
@@ -139,7 +263,7 @@ export default function InventoryPage() {
                       {medicine.expiryDate}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${medicine.price.toFixed(2)}
+                      Tsh.{medicine.price.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button 
