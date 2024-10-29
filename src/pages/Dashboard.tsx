@@ -27,7 +27,7 @@ export default function Dashboard() {
     totalSales: 0,
     lowStockItems: 0,
     expiringItems: 0,
-    pendingPrescriptions: 0,
+    totalTransactions: 0,
     todaysSales: 0,
     monthlyRevenue: 0,
     topSellingMedicines: []
@@ -36,7 +36,7 @@ export default function Dashboard() {
   const quickStats = [
     { icon: Package, label: 'Low Stock Items', value: stats.lowStockItems, color: 'text-yellow-600' },
     { icon: AlertTriangle, label: 'Expiring Items', value: stats.expiringItems, color: 'text-red-600' },
-    { icon: FileText, label: 'Pending Prescriptions', value: stats.pendingPrescriptions, color: 'text-blue-600' },
+    { icon: FileText, label: 'Total Transactions', value: stats.totalTransactions, color: 'text-blue-600' },
     { icon: Clock, label: "Today's Sales", value: `Tsh.${stats.todaysSales.toFixed(2)}`, color: 'text-green-600' }
   ];
 

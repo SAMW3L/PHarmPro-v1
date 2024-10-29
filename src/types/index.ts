@@ -111,8 +111,9 @@ export interface DashboardStats {
   totalSales: number;
   lowStockItems: number;
   expiringItems: number;
-  pendingPrescriptions: number;
+  //pendingPrescriptions: number;
   todaysSales: number;
+  totalTransactions: number;
   monthlyRevenue: number;
   topSellingMedicines: {
     medicineName: string;

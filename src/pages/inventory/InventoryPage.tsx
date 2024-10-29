@@ -145,8 +145,8 @@ export default function InventoryPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-900">Inventory Management</h1>
-          <div className="flex gap-4">
-            <div className="relative">
+          <div className="flex gap-8">
+            <div className="relative flex items-center gap-4">
               <label className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
                 <Upload className="h-5 w-5 mr-2" />
                 Upload Excel
@@ -158,14 +158,14 @@ export default function InventoryPage() {
                 />
               </label>
               <button
-                className="absolute -right-8 top-1/2 -translate-y-1/2"
+                className="flex items-center p-2.5 bg-blue-100 rounded-md hover:bg-blue-200"
                 onClick={() => setShowUploadInfo(!showUploadInfo)}
               >
-                <Info className="h-5 w-5 text-gray-500" />
+                <Info className="h-6 w-6 text-blue-600" />
               </button>
               {showUploadInfo && (
-                <div className="absolute right-0 mt-2 p-4 bg-white shadow-lg rounded-md w-80 z-10 text-sm">
-                  <h3 className="font-bold mb-2">Required Excel Columns:</h3>
+                <div className="absolute top-full left-0 mt-2 p-4 bg-white shadow-lg rounded-md w-80 z-50 text-sm">
+                  <h3 className="font-bold mb-2">Required Excel Columns Before Upload:</h3>
                   <ul className="list-disc pl-4 space-y-1 text-red-600">
                     <li>name (text) - Medicine name</li>
                     <li>price (number) - Price greater than 0</li>
