@@ -30,6 +30,7 @@ export default function ReportsPage() {
       total: 11.98,
       paymentMethod: 'cash',
       customerName: 'John Doe',
+      customerPhone: '+255 123 456 789',
       soldBy: 'Jane Smith',
       status: 'completed'
     }
@@ -142,12 +143,13 @@ export default function ReportsPage() {
           // ).map(sale => ({
           //   Date: sale.date,
           //   Customer: sale.customerName,
+          //   'Phone Number': sale.customerPhone,
           //   Items: sale.items.length,
           //   Total: `Tsh.${sale.total.toFixed(2)}`,
           //   'Payment Method': sale.paymentMethod,
           //   Status: sale.status
           // })),
-          columns: ['Date', 'Customer', 'Items', 'Total', 'Payment Method', 'Status']
+          columns: ['Date', 'Customer', 'Phone Number', 'Items', 'Total', 'Payment Method', 'Status']
         };
       case 'inventory':
         return {

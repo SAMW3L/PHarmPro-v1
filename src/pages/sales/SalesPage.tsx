@@ -9,12 +9,16 @@ export default function SalesPage() {
   const [cart, setCart] = React.useState<Array<{ medicine: Medicine; quantity: number }>>([]);
   const [showReceipt, setShowReceipt] = React.useState(false);
   const [paymentMethod, setPaymentMethod] = React.useState<'cash' | 'card' | 'mobile'>('cash');
+  const [customerName, setCustomerName] = React.useState('');
+  const [customerPhone, setCustomerPhone] = React.useState('');
   const [currentSale, setCurrentSale] = React.useState<{
     items: Array<{ medicine: Medicine; quantity: number }>;
     total: number;
     transactionId: string;
     date: string;
     paymentMethod: string;
+    customerName: string;
+    customerPhone: string;
   } | null>(null);
   const [successMessage, setSuccessMessage] = React.useState('');
 
@@ -135,12 +139,19 @@ export default function SalesPage() {
   const total = cart.reduce((sum, item) => sum + (item.medicine.price * item.quantity), 0);
 
   const handleCompleteSale = () => {
+    if (!customerName || !customerPhone) {
+      alert('Please enter customer details before completing the sale');
+      return;
+    }
+
     const sale = {
       items: [...cart],
       total,
       transactionId: `SALE-${Date.now()}`,
       date: new Date().toLocaleString(),
-      paymentMethod
+      paymentMethod,
+      customerName,
+      customerPhone
     };
 
     // Update stock levels
@@ -161,6 +172,8 @@ export default function SalesPage() {
     setShowReceipt(true);
     setSuccessMessage('Sale completed successfully!');
     setCart([]);
+    setCustomerName('');
+    setCustomerPhone('');
 
     // Clear success message after 3 seconds
     setTimeout(() => {
@@ -294,19 +307,47 @@ export default function SalesPage() {
                 <span>Tsh.{total.toFixed(2)}</span>
               </div>
               
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Payment Method
-                </label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'mobile')}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="mobile">Mobile Money</option>
-                </select>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter customer name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter phone number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Method
+                  </label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'mobile')}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="mobile">Mobile Money</option>
+                  </select>
+                </div>
               </div>
 
               <button

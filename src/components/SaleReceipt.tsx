@@ -4,12 +4,13 @@ import { Medicine } from '../types';
 interface SaleReceiptProps {
   items: Array<{ medicine: Medicine; quantity: number }>;
   total: number;
-  transactionId: string;
   date: string;
   paymentMethod: string;
+  customerName: string;
+  customerPhone: string;
 }
 
-export default function SaleReceipt({ items, total, transactionId, date, paymentMethod }: SaleReceiptProps) {
+export default function SaleReceipt({ items, total, date, paymentMethod, customerName, customerPhone }: SaleReceiptProps) {
   return (
     <div className="bg-white p-6 max-w-md mx-auto" id="receipt">
       <div className="text-center mb-6">
@@ -19,9 +20,10 @@ export default function SaleReceipt({ items, total, transactionId, date, payment
       </div>
 
       <div className="mb-4">
-        <p className="text-sm">Transaction ID: {transactionId}</p>
-        <p className="text-sm">Date: {date}</p>
         <p className="text-sm">Payment Method: {paymentMethod}</p>
+        <p className="text-sm">Date: {date}</p>
+        <b><p className="text-sm">Customer Name: {customerName}</p>
+        <p className="text-sm">Customer Phone: {customerPhone}</p></b>
       </div>
 
       <div className="border-t border-b border-gray-200 py-4 mb-4">
