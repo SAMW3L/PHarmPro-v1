@@ -1,10 +1,11 @@
 import React from 'react';
 import Layout from '../../components/Layout';
-import { Calendar, Download, TrendingUp, Package, AlertTriangle, Users, DollarSign, FileSpreadsheet } from 'lucide-react';
+import { Calendar, Download, TrendingUp, Package, AlertTriangle, Users, DollarSign, FileSpreadsheet, UserCircle } from 'lucide-react';
 import { Medicine, Sale, User } from '../../types';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Title } from 'chart.js';
+import SaleReceipt from '../../components/SaleReceipt';
 
 export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = React.useState('sales');
@@ -12,190 +13,109 @@ export default function ReportsPage() {
     start: new Date().toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   });
+  const [selectedSale, setSelectedSale] = React.useState<Sale | null>(null);
+  const [showReceipt, setShowReceipt] = React.useState(false);
+  const [salesData, setSalesData] = React.useState<Sale[]>([]);
+  const [medicines, setMedicines] = React.useState<Medicine[]>([]);
 
-  // Mock data for reports
-  const [salesData] = React.useState<Sale[]>([
-    {
-      id: '1',
-      date: '2024-03-15',
-      items: [
-        {
-          medicineId: '1',
-          quantity: 2,
-          price: 5.99,
-          subtotal: 11.98,
-          batchNumber: 'BAT123'
-        }
-      ],
-      total: 11.98,
-      paymentMethod: 'cash',
-      customerName: 'John Doe',
-      customerPhone: '+255 123 456 789',
-      soldBy: 'Jane Smith',
-      status: 'completed'
-    }
-  ]);
+  React.useEffect(() => {
+    // Fetch medicines data
+    const fetchMedicines = async () => {
+      try {
+        const response = await fetch('/api/medicines');
+        const data = await response.json();
+        setMedicines(data);
+      } catch (error) {
+        console.error('Error fetching medicines:', error);
+      }
+    };
 
-  const [medicines] = React.useState<Medicine[]>([
-   {
-        id: '1',
-        name: 'Paracetamol 500mg',
-        barcode: '123456789',
-        genericName: 'Acetaminophen',
-        manufacturer: 'PharmaCo',
-        category: 'Pain Relief',
-        dosageForm: 'Tablet',
-        strength: '500mg',
-        price: 50.00,
-        reorderLevel: 100,
-        stock: 26,
-        batchNumber: 'BAT123',
-        expiryDate: '2024-12-31',
-        location: 'Shelf A1',
-        supplier: 'MedSupply Inc'
-    },
-    {
-        id: '2',
-        name: 'Ibuprofen 400mg',
-        barcode: '987654321',
-        genericName: 'Ibuprofen',
-        manufacturer: 'HealthCorp',
-        category: 'Pain Relief',
-        dosageForm: 'Tablet',
-        strength: '400mg',
-        price: 45.00,
-        reorderLevel: 80,
-        stock: 50,
-        batchNumber: 'BAT124',
-        expiryDate: '2025-01-15',
-        location: 'Shelf B2',
-        supplier: 'PharmaPlus'
-    },
-    {
-        id: '3',
-        name: 'Amoxicillin 250mg',
-        barcode: '123123123',
-        genericName: 'Amoxicillin',
-        manufacturer: 'MediPharm',
-        category: 'Antibiotic',
-        dosageForm: 'Capsule',
-        strength: '250mg',
-        price: 60.00,
-        reorderLevel: 50,
-        stock: 30,
-        batchNumber: 'BAT125',
-        expiryDate: '2024-11-30',
-        location: 'Shelf C3',
-        supplier: 'QuickMeds'
-    },
-    {
-        id: '4',
-        name: 'Lisinopril 10mg',
-        barcode: '321321321',
-        genericName: 'Lisinopril',
-        manufacturer: 'CardioHealth',
-        category: 'Antihypertensive',
-        dosageForm: 'Tablet',
-        strength: '10mg',
-        price: 55.00,
-        reorderLevel: 40,
-        stock: 20,
-        batchNumber: 'BAT126',
-        expiryDate: '2025-06-15',
-        location: 'Shelf D4',
-        supplier: 'BestMeds'
-    },
-    {
-        id: '5',
-        name: 'Cetirizine 10mg',
-        barcode: '456456456',
-        genericName: 'Cetirizine',
-        manufacturer: 'AllerCare',
-        category: 'Antihistamine',
-        dosageForm: 'Tablet',
-        strength: '10mg',
-        price: 35.00,
-        reorderLevel: 60,
-        stock: 40,
-        batchNumber: 'BAT127',
-        expiryDate: '2024-07-20',
-        location: 'Shelf E5',
-        supplier: 'MediStore'
-    }
-  ]);
+    // Fetch sales data
+    const fetchSales = async () => {
+      try {
+        const response = await fetch(`/api/sales?start=${dateRange.start}&end=${dateRange.end}`);
+        const data = await response.json();
+        setSalesData(data);
+      } catch (error) {
+        console.error('Error fetching sales:', error);
+      }
+    };
+
+    fetchMedicines();
+    fetchSales();
+  }, [dateRange]);
 
   const reports = [
     { id: 'sales', name: 'Sales Report', icon: TrendingUp },
     { id: 'inventory', name: 'Inventory Report', icon: Package },
     { id: 'expiring', name: 'Expiring Items Report', icon: AlertTriangle },
     { id: 'collections', name: 'Employee Collections', icon: Users },
-    { id: 'reorder', name: 'Reorder Level Report', icon: DollarSign }
+    { id: 'reorder', name: 'Reorder Level Report', icon: DollarSign },
+    { id: 'customers', name: 'Customer Report', icon: UserCircle }
   ];
+
+  const handlePrintReceipt = (sale: Sale) => {
+    setSelectedSale(sale);
+    setShowReceipt(true);
+    setTimeout(() => {
+      const receiptElement = document.getElementById('receipt');
+      if (receiptElement) {
+        const printWindow = window.open('', '', 'width=800,height=600');
+        if (printWindow) {
+          printWindow.document.write(receiptElement.outerHTML);
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        }
+      }
+      setShowReceipt(false);
+    }, 100);
+  };
 
   const getReportData = () => {
     switch (selectedReport) {
       case 'sales':
         return {
           title: 'Sales Report',
-          data: [''],
-          // data: salesData.filter(sale => 
-          //   sale.date >= dateRange.start && sale.date <= dateRange.end
-          // ).map(sale => ({
-          //   Date: sale.date,
-          //   Customer: sale.customerName,
-          //   'Phone Number': sale.customerPhone,
-          //   Items: sale.items.length,
-          //   Total: `Tsh.${sale.total.toFixed(2)}`,
-          //   'Payment Method': sale.paymentMethod,
-          //   Status: sale.status
-          // })),
+          data: [],
           columns: ['Date', 'Customer', 'Phone Number', 'Items', 'Total', 'Payment Method', 'Status']
         };
       case 'inventory':
         return {
           title: 'Inventory Report',
-          data: medicines.map(med => ({
-            Name: med.name,
-            Stock: med.stock,
-            Category: med.category,
-            'Expiry Date': med.expiryDate,
-            Price: `Tsh.${med.price.toFixed(2)}`
-          })),
+          data: [],
           columns: ['Name', 'Stock', 'Category', 'Expiry Date', 'Price']
         };
       case 'expiring':
-        const threeMonthsFromNow = new Date();
-        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
         return {
           title: 'Expiring Items Report',
-          data: medicines
-            .filter(med => new Date(med.expiryDate) <= threeMonthsFromNow)
-            .map(med => ({
-              Name: med.name,
-              'Expiry Date': med.expiryDate,
-              Stock: med.stock,
-              Location: med.location
-            })),
+          data: [],
           columns: ['Name', 'Expiry Date', 'Stock', 'Location']
         };
-        case 'collections':
-          return {
-            title:'Employee collecion Report',
-            data: [''],
-            columns: ['Employee Name','Number of Customer','Total Amount']
-          };
-          case 'reorder':
-          return {
-            title:'Out Of Stock Medicine Report',
-            data: [''],
-            columns: ['Item Name','Initial Balance','Current Balance','Item Category','Item Price']
-          };
+      case 'collections':
+        return {
+          title: 'Employee Collection Report',
+          data: [],
+          columns: ['Employee Name', 'Number of Customer', 'Total Amount']
+        };
+      case 'reorder':
+        return {
+          title: 'Out Of Stock Medicine Report',
+          data: [],
+          columns: ['Item Name', 'Initial Balance', 'Current Balance', 'Item Category', 'Item Price']
+        };
+      case 'customers':
+        return {
+          title: 'Customer Report',
+          data: [],
+          columns: ['Receipt No', 'Date', 'Customer Name', 'Phone Number', 'Items', 'Total Amount', 'Payment Method', 'Served By', 'Actions']
+        };
       default:
         return {
           title: 'No Data',
           data: [],
-          columns:[]
-          
+          columns: []
         };
     }
   };
@@ -380,6 +300,22 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      {showReceipt && selectedSale && (
+        <div className="hidden">
+          <SaleReceipt
+            items={selectedSale.items.map(item => ({
+              medicine: medicines.find(m => m.id === item.medicineId)!,
+              quantity: item.quantity
+            }))}
+            total={selectedSale.total}
+            date={selectedSale.date}
+            paymentMethod={selectedSale.paymentMethod}
+            customerName={selectedSale.customerName}
+            customerPhone={selectedSale.customerPhone}
+          />
+        </div>
+      )}
     </Layout>
   );
 }
